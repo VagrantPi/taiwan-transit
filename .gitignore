@@ -23,6 +23,11 @@ frontend/.pub/
 *.iml
 .DS_Store
 
+# === 建置產物（APK/IPA 改由 GitHub Actions 產出為 artifact，不入版控）===
+release/
+*.apk
+*.ipa
+
 # === iOS / Android 產物 ===
 frontend/ios/Pods/
 frontend/ios/.symlinks/
