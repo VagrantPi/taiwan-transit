@@ -1,11 +1,13 @@
-name: Build (Android + iOS)
+name: Build & Release (Android + iOS)
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
+
+# release job 需要寫入 Releases 的權限
+permissions:
+  contents: write
 
 env:
   FLUTTER_VERSION: "3.35.3"
@@ -69,3 +71,34 @@ jobs:
           name: ios-app
           path: frontend/build/ios/iphoneos/Runner.app.zip
           if-no-files-found: error
+
+  release:
+    name: Publish to Releases
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Stage release assets
+        run: |
+          mkdir -p assets
+          cp dist/android-apk/app-release.apk assets/taiwan-transit.apk
+          cp dist/ios-app/Runner.app.zip       assets/taiwan-transit-ios.zip
+          ls -lh assets
+
+      - name: Publish rolling "latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: 最新建置 (latest)
+          prerelease: true
+          # 讓 latest tag 隨每次 build 指向最新 commit
+          target_commitish: ${{ github.sha }}
+          body: |
+            自動建置產物（commit ${{ github.sha }}）
+            - `taiwan-transit.apk`：Android（release，debug key 簽署，可側載）
+            - `taiwan-transit-ios.zip`：iOS 未簽署 .app（需自行簽署安裝）
+          files: assets/*
