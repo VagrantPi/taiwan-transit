@@ -19,6 +19,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('台灣交通通'), findsWidgets);
-    expect(find.text('後端連線正常'), findsOneWidget);
+    expect(find.text('資料來源連線正常'), findsOneWidget);
   });
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/api_client.dart';
+import 'core/config.dart';
 import 'core/providers.dart';
 import 'core/theme.dart';
 
@@ -46,10 +46,12 @@ class HomePage extends ConsumerWidget {
                 color: ok ? Colors.green : Colors.red,
               ),
               const SizedBox(height: 16),
-              Text(ok ? '後端連線正常' : '後端無法連線'),
+              Text(ok ? '資料來源連線正常' : '資料來源無法連線'),
               const SizedBox(height: 8),
-              Text('API: $kApiBaseUrl',
-                  style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                useBackend ? '來源：後端 BFF' : '來源：直連 TDX',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
           ),
         ),

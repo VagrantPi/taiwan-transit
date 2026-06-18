@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 直連 TDX / 後端皆需連網；release build 不會自動帶入，須明確宣告 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="taiwan_transit"
         android:name="${applicationName}"
