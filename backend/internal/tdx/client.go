@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	authURL = "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token"
-	baseURL = "https://tdx.transportdata.tw/api/basic"
+	defaultAuthURL = "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token"
+	defaultBaseURL = "https://tdx.transportdata.tw/api/basic"
 )
 
 // Client 是 TDX API 的最小可用客戶端，內含 token 快取。
@@ -25,6 +25,9 @@ type Client struct {
 	clientID     string
 	clientSecret string
 	httpClient   *http.Client
+
+	authURL string // token 端點；測試時可覆寫指向假 server
+	baseURL string // API 端點；測試時可覆寫指向假 server
 
 	mu          sync.Mutex
 	accessToken string
@@ -37,6 +40,8 @@ func NewClient(clientID, clientSecret string) *Client {
 		clientID:     clientID,
 		clientSecret: clientSecret,
 		httpClient:   &http.Client{Timeout: 15 * time.Second},
+		authURL:      defaultAuthURL,
+		baseURL:      defaultBaseURL,
 	}
 }
 
@@ -59,7 +64,7 @@ func (c *Client) token(ctx context.Context) (string, error) {
 	form.Set("client_id", c.clientID)
 	form.Set("client_secret", c.clientSecret)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, authURL, strings.NewReader(form.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.authURL, strings.NewReader(form.Encode()))
 	if err != nil {
 		return "", fmt.Errorf("build token request: %w", err)
 	}
@@ -94,7 +99,7 @@ func (c *Client) Get(ctx context.Context, path string) ([]byte, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL+path, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+path, nil)
 	if err != nil {
 		return nil, fmt.Errorf("build api request: %w", err)
 	}

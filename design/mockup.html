@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>台灣交通通 — UI 視覺草稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --surface: #ffffff;
+    --ink: #11243d;
+    --ink-soft: #5b6b7c;
+    --line: #e4e8ed;
+    --led-bg: #161a21;
+    --led: #ffb02e;
+    --led-dim: #6a4a12;
+    --bus: #f26b21;
+    --rail: #1f6fb2;
+    --bike: #f5c518;
+    --ok: #1f9d57;
+    --danger: #d9534f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Noto Sans TC", system-ui, sans-serif;
+    background: #d9dee4;
+    color: var(--ink);
+    display: flex; flex-wrap: wrap; gap: 28px;
+    justify-content: center; padding: 32px 16px;
+  }
+  .lab { width: 100%; text-align: center; color: #3a4a5c; }
+  .caption { width: 100%; text-align: center; color: #46566a; font-size: 14px; margin: -14px 0 6px; }
+
+  /* 手機外框 */
+  .phone {
+    width: 360px; height: 720px; background: var(--bg);
+    border-radius: 34px; overflow: hidden; position: relative;
+    box-shadow: 0 18px 50px rgba(17,36,61,.28);
+    display: flex; flex-direction: column;
+    border: 6px solid #11243d;
+  }
+  .phone .title { text-align:center; font-size:12px; color:var(--ink-soft); padding:6px; }
+
+  /* 頂欄 */
+  header {
+    background: var(--ink); color: #fff; padding: 16px 18px 14px;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  header .brand { font-weight: 900; font-size: 19px; letter-spacing: .5px; }
+  header .brand small { font-weight: 500; font-size: 11px; opacity: .6; margin-left: 6px; letter-spacing: 2px; }
+  header .loc { font-size: 12px; opacity: .8; }
+
+  /* 內容 */
+  main { flex: 1; overflow-y: auto; padding: 14px 14px 16px; }
+  .sec-eyebrow {
+    display:flex; align-items:center; gap:8px; margin: 4px 2px 12px;
+    font-size: 12px; letter-spacing: 3px; color: var(--ink-soft); font-weight:700;
+  }
+  .sec-eyebrow .bar { width: 22px; height: 3px; border-radius: 2px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .route-badge {
+    min-width: 52px; height: 40px; border-radius: 9px; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight: 900; font-size: 17px; padding: 0 8px;
+  }
+  .card .meta { flex: 1; min-width: 0; }
+  .card .meta .name { font-weight: 700; font-size: 15.5px; }
+  .card .meta .sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+
+  /* LED 看板（signature）*/
+  .led {
+    background: var(--led-bg); color: var(--led);
+    font-family: "Roboto Mono", monospace; font-weight: 700;
+    border-radius: 8px; padding: 7px 10px; text-align:center; min-width: 64px;
+    box-shadow: inset 0 0 0 1px #2a2f38;
+    text-shadow: 0 0 8px rgba(255,176,46,.55);
+  }
+  .led .big { font-size: 20px; line-height: 1; letter-spacing: 1px; }
+  .led .unit { font-size: 10px; opacity: .8; letter-spacing: 1px; }
+  .led.soon { color: #ff6b3d; text-shadow: 0 0 8px rgba(255,107,61,.55); }
+  .led.idle { color: var(--led-dim); text-shadow: none; }
+
+  /* 時刻表列（rail）*/
+  .train .meta .time {
+    font-family:"Roboto Mono",monospace; font-weight:700; font-size:15px; color:var(--ink);
+  }
+  .train .arrow { color: var(--ink-soft); margin: 0 6px; }
+
+  /* 車位 bar（bike）*/
+  .availbar { display:flex; gap:6px; align-items:flex-end; height: 40px; }
+  .availbar .col { text-align:center; }
+  .availbar .num { font-family:"Roboto Mono",monospace; font-weight:700; font-size:19px; }
+  .availbar .lbl { font-size:10px; color:var(--ink-soft); }
+
+  /* 狀態：loading / error / empty */
+  .state { padding: 48px 24px; text-align: center; color: var(--ink-soft); }
+  .state .ico { font-size: 40px; margin-bottom: 12px; }
+  .skel { background: var(--surface); border:1px solid var(--line); border-radius:14px; height:68px; margin-bottom:10px; position:relative; overflow:hidden; }
+  .skel::after { content:""; position:absolute; inset:0; transform:translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(17,36,61,.06), transparent); animation: sh 1.2s infinite; }
+  @keyframes sh { to { transform: translateX(100%); } }
+  .btn { margin-top:14px; display:inline-block; background:var(--ink); color:#fff; border:none;
+    padding:9px 18px; border-radius:9px; font-weight:700; font-size:13px; font-family:inherit; }
+
+  /* 底部 tab */
+  nav {
+    display: flex; background: var(--surface); border-top: 1px solid var(--line);
+  }
+  nav a {
+    flex:1; text-align:center; padding: 9px 0 11px; text-decoration:none;
+    color: var(--ink-soft); font-size: 11px; font-weight:700;
+  }
+  nav a .ic { display:block; font-size: 21px; margin-bottom: 2px; }
+  nav a.on { color: var(--ink); }
+  nav a.on.bus  { color: var(--bus); box-shadow: inset 0 3px 0 var(--bus); }
+  nav a.on.rail { color: var(--rail); box-shadow: inset 0 3px 0 var(--rail); }
+  nav a.on.bike { color: #caa400; box-shadow: inset 0 3px 0 var(--bike); }
+</style>
+</head>
+<body>
+
+<div class="lab"><h2 style="color:#11243d">台灣交通通 · UI 視覺草稿（「月台 Platform」方向）</h2></div>
+<div class="caption">Signature＝琥珀點矩陣 LED 到站看板；底色冷紙白、navy 標誌色、每運具一個 accent</div>
+
+<!-- 1) 公車到站 -->
+<div class="phone">
+  <div class="title">① 公車到站動態</div>
+  <header>
+    <div class="brand">台灣交通通 <small>TRANSIT</small></div>
+    <div class="loc">◎ 信義區</div>
+  </header>
+  <main>
+    <div class="sec-eyebrow"><span class="bar" style="background:var(--bus)"></span>附近公車 · 即時到站</div>
+
+    <div class="card">
+      <div class="route-badge" style="background:var(--bus)">307</div>
+      <div class="meta"><div class="name">市政府站</div><div class="sub">往 撫遠街 · 往返 0</div></div>
+      <div class="led"><div class="big">3</div><div class="unit">分</div></div>
+    </div>
+    <div class="card">
+      <div class="route-badge" style="background:var(--bus)">信義<br>幹線</div>
+      <div class="meta"><div class="name">國父紀念館站</div><div class="sub">往 青年公園</div></div>
+      <div class="led soon"><div class="big">將到</div></div>
+    </div>
+    <div class="card">
+      <div class="route-badge" style="background:var(--bus)">20</div>
+      <div class="meta"><div class="name">捷運市府站</div><div class="sub">往 中華路</div></div>
+      <div class="led"><div class="big">12</div><div class="unit">分</div></div>
+    </div>
+    <div class="card">
+      <div class="route-badge" style="background:#9aa7b4">266</div>
+      <div class="meta"><div class="name">市民大道</div><div class="sub">往 動物園</div></div>
+      <div class="led idle"><div class="big">未發車</div></div>
+    </div>
+  </main>
+  <nav>
+    <a class="on bus"><span class="ic">🚌</span>公車</a>
+    <a class="rail"><span class="ic">🚆</span>鐵路</a>
+    <a class="bike"><span class="ic">🚲</span>YouBike</a>
+  </nav>
+</div>
+
+<!-- 2) 鐵路時刻 -->
+<div class="phone">
+  <div class="title">② 台鐵 / 高鐵時刻</div>
+  <header>
+    <div class="brand">台灣交通通 <small>TRANSIT</small></div>
+    <div class="loc">台北 → 台中</div>
+  </header>
+  <main>
+    <div class="sec-eyebrow"><span class="bar" style="background:var(--rail)"></span>06/18 · 即將出發</div>
+
+    <div class="card train">
+      <div class="route-badge" style="background:var(--rail)">自強<br>123</div>
+      <div class="meta">
+        <div class="name"><span class="time">08:00</span><span class="arrow">→</span><span class="time">09:28</span></div>
+        <div class="sub">台北 → 台中 · 1 小時 28 分</div>
+      </div>
+      <div class="led"><div class="big">08:00</div><div class="unit">出發</div></div>
+    </div>
+    <div class="card train">
+      <div class="route-badge" style="background:#e8731f">高鐵<br>805</div>
+      <div class="meta">
+        <div class="name"><span class="time">08:06</span><span class="arrow">→</span><span class="time">08:54</span></div>
+        <div class="sub">台北 → 台中 · 48 分</div>
+      </div>
+      <div class="led"><div class="big">08:06</div><div class="unit">出發</div></div>
+    </div>
+    <div class="card train">
+      <div class="route-badge" style="background:var(--rail)">區間<br>2155</div>
+      <div class="meta">
+        <div class="name"><span class="time">08:20</span><span class="arrow">→</span><span class="time">10:40</span></div>
+        <div class="sub">台北 → 台中 · 2 小時 20 分</div>
+      </div>
+      <div class="led"><div class="big">08:20</div><div class="unit">出發</div></div>
+    </div>
+  </main>
+  <nav>
+    <a class="bus"><span class="ic">🚌</span>公車</a>
+    <a class="on rail"><span class="ic">🚆</span>鐵路</a>
+    <a class="bike"><span class="ic">🚲</span>YouBike</a>
+  </nav>
+</div>
+
+<!-- 3) YouBike 車位 -->
+<div class="phone">
+  <div class="title">③ YouBike 即時車位</div>
+  <header>
+    <div class="brand">台灣交通通 <small>TRANSIT</small></div>
+    <div class="loc">◎ 信義區</div>
+  </header>
+  <main>
+    <div class="sec-eyebrow"><span class="bar" style="background:var(--bike)"></span>附近站點 · 即時車位</div>
+
+    <div class="card">
+      <div class="route-badge" style="background:var(--bike); color:#11243d">◉</div>
+      <div class="meta"><div class="name">捷運市府站(2 號出口)</div><div class="sub">120 公尺 · 30 車柱</div></div>
+      <div class="availbar">
+        <div class="col"><div class="num" style="color:var(--ok)">12</div><div class="lbl">可借</div></div>
+        <div class="col"><div class="num" style="color:var(--rail)">18</div><div class="lbl">可還</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="route-badge" style="background:var(--bike); color:#11243d">◉</div>
+      <div class="meta"><div class="name">市政府轉運站</div><div class="sub">240 公尺 · 42 車柱</div></div>
+      <div class="availbar">
+        <div class="col"><div class="num" style="color:var(--danger)">0</div><div class="lbl">可借</div></div>
+        <div class="col"><div class="num" style="color:var(--rail)">42</div><div class="lbl">可還</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="route-badge" style="background:var(--bike); color:#11243d">◉</div>
+      <div class="meta"><div class="name">松壽廣場</div><div class="sub">310 公尺 · 28 車柱</div></div>
+      <div class="availbar">
+        <div class="col"><div class="num" style="color:var(--ok)">21</div><div class="lbl">可借</div></div>
+        <div class="col"><div class="num" style="color:var(--ok)">7</div><div class="lbl">可還</div></div>
+      </div>
+    </div>
+  </main>
+  <nav>
+    <a class="bus"><span class="ic">🚌</span>公車</a>
+    <a class="rail"><span class="ic">🚆</span>鐵路</a>
+    <a class="on bike"><span class="ic">🚲</span>YouBike</a>
+  </nav>
+</div>
+
+<!-- 4) 三種狀態 -->
+<div class="phone">
+  <div class="title">④ Loading / Error / Empty 狀態</div>
+  <header>
+    <div class="brand">台灣交通通 <small>TRANSIT</small></div>
+    <div class="loc">◎ 定位中…</div>
+  </header>
+  <main>
+    <div class="sec-eyebrow"><span class="bar" style="background:var(--bus)"></span>載入中（骨架）</div>
+    <div class="skel"></div><div class="skel"></div>
+
+    <div class="sec-eyebrow" style="margin-top:18px"><span class="bar" style="background:var(--danger)"></span>連線錯誤</div>
+    <div class="state" style="padding:24px 16px">
+      <div class="ico">⚠️</div>
+      <div>無法取得到站資訊</div>
+      <div style="font-size:12.5px;margin-top:4px">請確認網路後重試</div>
+      <button class="btn">重新整理</button>
+    </div>
+
+    <div class="sec-eyebrow" style="margin-top:8px"><span class="bar" style="background:var(--ink-soft)"></span>查無資料</div>
+    <div class="state" style="padding:24px 16px">
+      <div class="ico">🔍</div>
+      <div>附近沒有可顯示的班次</div>
+      <div style="font-size:12.5px;margin-top:4px">換個地點或稍後再試</div>
+    </div>
+  </main>
+  <nav>
+    <a class="on bus"><span class="ic">🚌</span>公車</a>
+    <a class="rail"><span class="ic">🚆</span>鐵路</a>
+    <a class="bike"><span class="ic">🚲</span>YouBike</a>
+  </nav>
+</div>
+
+</body>
+</html>
