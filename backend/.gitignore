@@ -1,0 +1,11 @@
+# 環境變數
+.env
+
+# 編譯產物
+/bin/
+/server
+*.exe
+
+# Go 測試與覆蓋率
+*.out
+*.test
