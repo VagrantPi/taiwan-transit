@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// App 主題（B-4 將依 design skill 產出再細化）。
+import 'app_colors.dart';
+
+/// App 主題（「月台 Platform」方向）。
 ThemeData buildAppTheme() {
   return ThemeData(
-    colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1565C0)),
+    colorScheme: ColorScheme.fromSeed(seedColor: AppColors.ink),
+    scaffoldBackgroundColor: AppColors.bg,
     useMaterial3: true,
   );
 }

@@ -1,24 +1,25 @@
-// App 冒煙測試：覆寫 healthProvider 避免真實網路，確認首頁能依連線狀態渲染。
+// App 冒煙測試：開啟後預設顯示鐵路查詢頁與關鍵控制項。
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:taiwan_transit/core/providers.dart';
 import 'package:taiwan_transit/main.dart';
 
 void main() {
-  testWidgets('後端連線正常時首頁顯示對應狀態', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          healthProvider.overrideWith((ref) => Future.value(true)),
-        ],
-        child: const TaiwanTransitApp(),
-      ),
-    );
-    await tester.pumpAndSettle();
+  testWidgets('開啟顯示鐵路查詢頁與搜尋控制項', (WidgetTester tester) async {
+    // 以真實手機尺寸渲染，避免在預設 800x600 畫布上的版面溢出。
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-    expect(find.text('台灣交通通'), findsWidgets);
-    expect(find.text('資料來源連線正常'), findsOneWidget);
+    await tester.pumpWidget(const ProviderScope(child: TaiwanTransitApp()));
+    await tester.pump();
+
+    expect(find.text('台鐵 / 高鐵時刻'), findsOneWidget);
+    expect(find.text('搜尋'), findsWidgets); // 搜尋按鈕
+    expect(find.byIcon(Icons.swap_vert), findsOneWidget); // 起訖對調
+    expect(find.textContaining('上車時間'), findsWidgets); // 上車時間輸入
   });
 }
