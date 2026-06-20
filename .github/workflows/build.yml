@@ -1,4 +1,4 @@
-name: Build & Release (Android + iOS)
+name: Build & Release (Android)
 
 on:
   push:
@@ -42,39 +42,9 @@ jobs:
           path: frontend/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
 
-  build-ios:
-    name: Build iOS (no codesign)
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - run: flutter pub get
-      # CI 無簽署憑證，以 --no-codesign 產出未簽署的 .app
-      - run: flutter build ios --release --no-codesign
-
-      - name: Package Runner.app
-        run: |
-          cd build/ios/iphoneos
-          zip -r Runner.app.zip Runner.app
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ios-app
-          path: frontend/build/ios/iphoneos/Runner.app.zip
-          if-no-files-found: error
-
   release:
     name: Publish to Releases
-    needs: [build-android, build-ios]
+    needs: [build-android]
     runs-on: ubuntu-latest
     steps:
       - name: Download build artifacts
@@ -86,7 +56,6 @@ jobs:
         run: |
           mkdir -p assets
           cp dist/android-apk/app-release.apk assets/taiwan-transit.apk
-          cp dist/ios-app/Runner.app.zip       assets/taiwan-transit-ios.zip
           ls -lh assets
 
       - name: Publish rolling "latest" release
@@ -100,5 +69,4 @@ jobs:
           body: |
             自動建置產物（commit ${{ github.sha }}）
             - `taiwan-transit.apk`：Android（release，debug key 簽署，可側載）
-            - `taiwan-transit-ios.zip`：iOS 未簽署 .app（需自行簽署安裝）
           files: assets/*
